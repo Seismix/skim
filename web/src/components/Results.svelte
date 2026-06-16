@@ -42,10 +42,18 @@
 </script>
 
 {#snippet cap()}
-  <div class="cap">title <b>{titleLen}</b>ch · desc <b>{descLen}</b>ch · image <b>{imgInfo}</b></div>
+  <div class="font-mono text-[0.72rem] text-ink-soft tracking-[0.03em] mt-[0.7rem] [&_b]:text-ink [&_b]:font-medium">
+    title <b>{titleLen}</b>ch · desc <b>{descLen}</b>ch · image <b>{imgInfo}</b>
+  </div>
 {/snippet}
 
-<main class="results">
+<!-- .results lives outside .wrap (see App.svelte) so the grid can break past the
+     1080px reading column; it carries its own 2rem gutter. From lg the platform
+     cards flow into a 2-col (then 3-col at `ultra`) grid to cut scrolling, with
+     each column held at the card's true 524px instead of being crushed narrow. -->
+<main
+  class="max-w-[calc(524px+4rem)] mx-auto pt-4 px-8 pb-24 max-[620px]:px-[1.2rem] lg:max-w-[calc(1096px+4rem)] lg:grid lg:grid-cols-[repeat(2,minmax(0,524px))] lg:justify-center lg:gap-x-12 lg:gap-y-[2.75rem] lg:items-start ultra:max-w-[calc(1668px+4rem)] ultra:grid-cols-[repeat(3,minmax(0,524px))]"
+>
   {#if diags.length}
     <Section name="Diagnostics" spec={`${diags.length} issue${diags.length > 1 ? "s" : ""}`} wide>
       <Diagnostics {diags} />
@@ -53,12 +61,12 @@
   {/if}
 
   <Section name="Facebook / Open Graph" spec="1.91 : 1">
-    <div class="fb">
-      <Img src={og.image} ratio="1.91/1" />
-      <div class="body">
-        <div class="site">{domain}</div>
-        <div class="title">{og.title || "Untitled"}</div>
-        <div class="desc">{og.description}</div>
+    <div class="max-w-[524px] border border-line bg-paper">
+      <Img src={og.image} ratio="1.91/1" class="w-full aspect-[1.91/1] object-cover" />
+      <div class="py-[0.7rem] px-4 bg-mist">
+        <div class="font-mono text-[0.7rem] text-[#65676b] uppercase tracking-[0.02em]">{domain}</div>
+        <div class="text-base font-semibold text-[#1c1e21] my-[0.18rem] leading-[1.3] line-clamp-2">{og.title || "Untitled"}</div>
+        <div class="text-[0.86rem] text-[#65676b] line-clamp-1">{og.description}</div>
       </div>
     </div>
     {@render cap()}
@@ -66,24 +74,24 @@
 
   {#if isLarge}
     <Section name="Twitter / X" spec="summary_large_image · 2 : 1">
-      <div class="tw">
-        <Img src={og.image} ratio="2/1" />
-        <div class="body">
-          <div class="title">{og.title || "Untitled"}</div>
-          <div class="desc">{og.description}</div>
-          <div class="site">{domain}</div>
+      <div class="max-w-[524px] border border-line rounded-2xl overflow-hidden bg-paper">
+        <Img src={og.image} ratio="2/1" class="w-full aspect-[2/1] object-cover" />
+        <div class="py-[0.7rem] px-[0.9rem]">
+          <div class="text-[0.95rem] font-semibold text-[#0f1419] line-clamp-2">{og.title || "Untitled"}</div>
+          <div class="text-[0.9rem] text-[#536471] line-clamp-2">{og.description}</div>
+          <div class="font-mono text-[0.8rem] text-[#536471] mt-[0.15rem]">{domain}</div>
         </div>
       </div>
       {@render cap()}
     </Section>
   {:else}
     <Section name="Twitter / X" spec="summary · 1 : 1">
-      <div class="tws">
-        <Img src={og.image} />
-        <div class="body">
-          <div class="title">{og.title || "Untitled"}</div>
-          <div class="desc">{og.description}</div>
-          <div class="site">{domain}</div>
+      <div class="max-w-[524px] flex border border-line rounded-2xl overflow-hidden bg-paper">
+        <Img src={og.image} class="w-[130px] min-h-[130px] object-cover shrink-0" />
+        <div class="py-[0.7rem] px-[0.9rem] flex flex-col justify-center overflow-hidden">
+          <div class="text-[0.92rem] font-semibold text-[#0f1419] line-clamp-2">{og.title || "Untitled"}</div>
+          <div class="text-[0.86rem] text-[#536471] line-clamp-2">{og.description}</div>
+          <div class="font-mono text-[0.78rem] text-[#536471]">{domain}</div>
         </div>
       </div>
       {@render cap()}
@@ -91,29 +99,32 @@
   {/if}
 
   <Section name="LinkedIn" spec="1.91 : 1">
-    <div class="li">
-      <Img src={og.image} ratio="1.91/1" />
-      <div class="body">
-        <div class="title">{og.title || "Untitled"}</div>
-        <div class="site">{domain}</div>
+    <div class="max-w-[524px] border border-line bg-paper">
+      <Img src={og.image} ratio="1.91/1" class="w-full aspect-[1.91/1] object-cover" />
+      <div class="py-[0.65rem] px-[0.95rem] bg-paper border-t border-line">
+        <div class="text-[0.92rem] font-semibold text-[#000000e6] truncate">{og.title || "Untitled"}</div>
+        <div class="font-mono text-[0.72rem] text-[#00000099] mt-[0.1rem]">{domain}</div>
       </div>
     </div>
     {@render cap()}
   </Section>
 
   <Section name="Discord" spec="embed">
-    <div class="dc">
-      <div class="title">{og.title || "Untitled"}</div>
+    <!-- Discord stays dark — that is accurate to the platform. -->
+    <div class="max-w-[432px] bg-[#2b2d31] border-l-4 border-[#5865f2] rounded-[4px] py-[0.7rem] px-4">
+      <div class="text-base font-semibold text-[#00a8fc] mb-[0.3rem] leading-[1.3]">{og.title || "Untitled"}</div>
       {#if og.description}
-        <div class="desc">{og.description}</div>
+        <!-- Discord shows several lines and keeps source paragraph breaks. -->
+        <div class="text-[0.86rem] text-[#dbdee1] leading-[1.4] whitespace-pre-wrap line-clamp-[7]">{og.description}</div>
       {/if}
       {#if og.image && !icon}
-        <Img src={og.image} />
+        <Img src={og.image} class="max-w-[400px] max-h-[225px] w-auto rounded-[4px] bg-[#1e1f22]! mt-[0.6rem]" />
       {/if}
       {#if og.siteName}
-        <div class="dc-foot">
+        <!-- footer: site favicon + og:site_name, as Discord renders it -->
+        <div class="flex items-center gap-2 mt-[0.65rem] text-[0.78rem] text-[#dbdee1]">
           {#if dcFootIcon}
-            <img class="dc-foot-icon" src={proxied(dcFootIcon)} alt="" onerror={hideBroken} />
+            <img class="w-5 h-5 rounded-full object-cover shrink-0" src={proxied(dcFootIcon)} alt="" onerror={hideBroken} />
           {/if}
           <span>{og.siteName}</span>
         </div>
@@ -123,17 +134,17 @@
   </Section>
 
   <Section name="Slack" spec="unfurl">
-    <div class="sl">
-      <div class="sl-head">
+    <div class="max-w-[524px] border border-line border-l-4 border-l-[#1d9bd1] py-[0.7rem] px-4 bg-paper">
+      <div class="flex items-center gap-[0.4rem] mb-[0.22rem]">
         {#if og.favicon}
-          <img class="sl-fav" src={proxied(og.favicon)} alt="" onerror={hideBroken} />
+          <img class="w-4 h-4 rounded-[3px] object-cover shrink-0" src={proxied(og.favicon)} alt="" onerror={hideBroken} />
         {/if}
-        <span class="site">{og.siteName || domain}</span>
+        <span class="text-[0.88rem] font-bold text-[#1d1c1d]">{og.siteName || domain}</span>
       </div>
-      <div class="title">{og.title || "Untitled"}</div>
-      <div class="desc">{og.description}</div>
+      <div class="text-[0.92rem] font-semibold text-[#1264a3] mb-[0.2rem]">{og.title || "Untitled"}</div>
+      <div class="text-[0.88rem] text-[#454245] mb-2 leading-[1.4]">{og.description}</div>
       {#if og.image && !icon}
-        <Img src={og.image} />
+        <Img src={og.image} class="w-auto max-w-full max-h-[280px] rounded-[8px]" />
       {/if}
     </div>
     {@render cap()}
@@ -141,11 +152,17 @@
 
   {#if metaEntries.length}
     <Section name="Raw metadata" spec={`${metaEntries.length} tags`} wide bind:el={metaEl} highlight={flash}>
-      <table class="meta">
+      <table class="w-full border-collapse font-mono text-[0.82rem] [&_tr:hover_td]:bg-[#fbfdf8]">
         <tbody>
-          <tr><th>Property</th><th>Content</th></tr>
+          <tr>
+            <th class="text-left font-semibold py-2 px-[0.8rem] border-b border-ink uppercase tracking-[0.08em] text-[0.7rem]">Property</th>
+            <th class="text-left font-semibold py-2 px-[0.8rem] border-b border-ink uppercase tracking-[0.08em] text-[0.7rem]">Content</th>
+          </tr>
           {#each metaEntries as [k, v]}
-            <tr><td class="k">{k}</td><td class="v">{v}</td></tr>
+            <tr>
+              <td class="py-2 px-[0.8rem] border-b border-line align-top text-ink-soft whitespace-nowrap w-60 max-[620px]:w-auto">{k}</td>
+              <td class="py-2 px-[0.8rem] border-b border-line align-top text-ink [word-break:break-word]">{v}</td>
+            </tr>
           {/each}
         </tbody>
       </table>

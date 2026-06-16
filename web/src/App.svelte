@@ -91,28 +91,48 @@
   });
 </script>
 
-<div class="wrap">
-  <header class="topbar">
-    <span class="wordmark">skim<span class="caret" aria-hidden="true"></span></span>
-    <span class="byline">Social preview inspector</span>
+<div class="max-w-[1080px] mx-auto px-8 max-[620px]:px-[1.2rem]">
+  <header class="flex items-center justify-between pt-6 pb-[1.4rem] border-b border-ink">
+    <span class="text-[1.35rem] font-medium tracking-[-0.03em] inline-flex items-center"
+      >skim<span
+        class="inline-block w-[0.42em] h-[1.05em] bg-lime ml-[0.12em] translate-y-[0.12em] animate-caret"
+        aria-hidden="true"
+      ></span></span
+    >
+    <span class="font-mono text-[0.72rem] tracking-[0.04em] uppercase text-ink-soft">Social preview inspector</span>
   </header>
 
-  <section class="hero">
-    <div class="eyebrow">Open Graph · Twitter · LinkedIn · Discord · Slack</div>
-    <h1>See how a link looks when it&rsquo;s <em>shared</em> &mdash; before it ships.</h1>
+  <section class="pt-[2.75rem] pb-[1.75rem] max-w-[600px] mx-auto text-center max-[620px]:pt-12 max-[620px]:pb-8">
+    <div class="font-mono text-[0.72rem] tracking-[0.22em] uppercase text-ink-soft mb-[0.85rem]">
+      Open Graph · Twitter · LinkedIn · Discord · Slack
+    </div>
+    <h1 class="text-[1.12rem] font-normal tracking-normal leading-normal text-ink-soft">
+      See how a link looks when it&rsquo;s
+      <em class="not-italic text-ink shadow-[inset_0_-0.16em_0_var(--color-lime)]">shared</em> &mdash; before it ships.
+    </h1>
   </section>
 
-  <section class="console">
+  <section class="max-w-[524px] mx-auto pb-4">
     <UrlBar bind:url {loading} onsubmit={submit} />
-    <div class="status" class:err={!!error} role="status" aria-live="polite">
+    <div
+      class="font-mono text-[0.78rem] mt-[0.85rem] min-h-[1.1em] tracking-[0.01em] {error ? 'text-warn' : 'text-ink-soft'}"
+      role="status"
+      aria-live="polite"
+    >
       {#if loading}
-        skimming {target}<span class="tick"></span>
+        skimming {target}<span
+          class="inline-block w-[0.5em] h-[1em] bg-lime translate-y-[0.15em] ml-[0.15em] animate-tick"
+        ></span>
       {:else if error}
         error &mdash; {error}
       {:else if metaCount !== null}
         done ·
         {#if metaCount > 0}
-          <button type="button" class="meta-jump" onclick={jumpToMeta}>{metaCount} meta tags</button>
+          <button
+            type="button"
+            class="text-ink bg-transparent border-none px-[0.05em] cursor-pointer border-b border-lime transition-colors duration-[120ms] hover:bg-lime"
+            onclick={jumpToMeta}>{metaCount} meta tags</button
+          >
         {:else}
           {metaCount} meta tags
         {/if}
@@ -128,8 +148,10 @@
   <Results og={data} inputUrl={lastUrl} bind:metaEl flash={flashMeta} />
 {/if}
 
-<div class="wrap">
-  <footer class="foot">
+<div class="max-w-[1080px] mx-auto px-8 max-[620px]:px-[1.2rem]">
+  <footer
+    class="border-t border-line pt-6 pb-10 font-mono text-[0.72rem] tracking-[0.03em] text-ink-soft flex justify-between flex-wrap gap-2"
+  >
     <span>skim — a single-binary local tool. Fetches on your machine, so localhost works.</span>
   </footer>
 </div>

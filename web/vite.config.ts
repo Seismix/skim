@@ -1,5 +1,6 @@
 import { defineConfig, type PluginOption } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
+import tailwindcss from "@tailwindcss/vite";
 import { spawn, execFileSync, type ChildProcess } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -44,7 +45,7 @@ function goBackend(): PluginOption {
 }
 
 export default defineConfig({
-  plugins: [svelte(), goBackend()],
+  plugins: [tailwindcss(), svelte(), goBackend()],
   base: "./",
   build: {
     outDir: "dist",
