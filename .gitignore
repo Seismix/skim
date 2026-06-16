@@ -1,0 +1,8 @@
+# build artifacts
+/dist/
+/web/dist/
+/web/node_modules/
+
+# os
+.DS_Store
+*.log
