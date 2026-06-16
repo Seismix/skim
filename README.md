@@ -4,7 +4,7 @@ Preview how a link looks when shared on social media — **including `localhost`
 
 skim extracts OpenGraph / Twitter / standard meta tags from any URL and renders realistic preview cards for **Facebook, Twitter/X, LinkedIn, Discord, and Slack**, plus validation diagnostics and a raw meta-tag grid.
 
-![skim previewing a link across Facebook, Twitter/X, LinkedIn, Discord, and Slack, with diagnostics and a raw meta-tag grid](docs/screenshot.png)
+<img src="docs/screenshot.png" alt="skim previewing a link across Facebook, Twitter/X, LinkedIn, Discord, and Slack, with diagnostics and a raw meta-tag grid" width="1000">
 
 > The cards are **approximations** of how each platform renders a shared link — not pixel-perfect reproductions. Exact appearance varies by platform, client, and device, and shifts over time as the platforms change. Use skim to sanity-check your tags and layout, not to match a specific platform down to the pixel.
 
