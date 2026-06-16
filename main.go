@@ -109,7 +109,7 @@ func main() {
 	_ = srv.Shutdown(shutdownCtx)
 }
 
-// ogData mirrors the JSON shape the UI expects (see ui/index.html).
+// ogData mirrors the JSON shape the UI expects
 type ogData struct {
 	Title          string            `json:"title"`
 	Description    string            `json:"description"`
