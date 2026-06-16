@@ -138,7 +138,7 @@
             {#if og.image && !icon}
                 <Img
                     src={og.image}
-                    class="max-w-[400px] max-h-[225px] w-auto rounded-[4px] bg-[#1e1f22]! mt-[0.6rem]"
+                    class="max-w-[min(400px,100%)] max-h-[225px] w-auto rounded-[4px] bg-[#1e1f22]! mt-[0.6rem]"
                 />
             {/if}
             {#if og.siteName}

@@ -21,7 +21,7 @@
 <!-- mt/mb give vertical rhythm on narrow screens; the wide-screen grid zeroes
      them (lg:my-0) and spaces rows with row-gap instead. wide → full-bleed row. -->
 <div class="mt-[3.75rem] mb-[1.4rem] lg:my-0 {wide ? 'lg:col-span-full' : ''}" bind:this={el}>
-    <div class="flex items-baseline gap-[0.85rem] font-mono text-[0.74rem] tracking-[0.16em] uppercase">
+    <div class="flex items-baseline gap-[0.85rem] mb-[0.7rem] font-mono text-[0.74rem] tracking-[0.16em] uppercase">
         <!-- brief lime flash matching the jump-link hover, so the target is clear even when no scroll happens -->
         <span
             class="text-ink font-semibold transition-[background-color,box-shadow] duration-500 ease-in-out {highlight

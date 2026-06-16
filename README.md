@@ -2,11 +2,7 @@
 
 Preview how a link looks when shared on social media — **including `localhost`** — without deploying.
 
-skim extracts OpenGraph / Twitter / standard meta tags from any URL and renders realistic preview cards for **Facebook, Twitter/X, LinkedIn, Discord, and Slack**, plus validation diagnostics and a raw meta-tag grid. It is a rebuild of an Electron app as a **single, dependency-free ~7 MB binary** that opens in your browser — no Chromium, no install.
-
-## Why not Electron?
-
-The original app wrapped a small web UI in a ~200 MB Electron shell. skim rebuilds that UI in Svelte and serves it from a tiny local HTTP server compiled to one native file. Drop it in Slack; a colleague runs it and it works — no runtime to install.
+skim extracts OpenGraph / Twitter / standard meta tags from any URL and renders realistic preview cards for **Facebook, Twitter/X, LinkedIn, Discord, and Slack**, plus validation diagnostics and a raw meta-tag grid. 
 
 ## Quick start
 
