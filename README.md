@@ -82,16 +82,3 @@ This starts the Vite dev server (HMR for `web/src/**`) and **automatically build
 | Server + CLI | Go (`net/http`, `embed`) |
 | HTML parsing | [goquery](https://github.com/PuerkitoBio/goquery) |
 | UI | [Svelte 5](https://svelte.dev/) + [Vite](https://vite.dev/) + [Tailwind CSS](https://tailwindcss.com/), built to static assets and embedded; Milk Interactive branding |
-
-## Project layout
-
-```text
-skim/
-├── main.go           # server + embed + browser launch + graceful shutdown
-├── go.mod / go.sum
-├── web/              # Svelte UI (Vite) — built to web/dist, embedded into the binary
-│   ├── src/          #   App.svelte, components/, lib/, app.css
-│   └── package.json
-├── Makefile
-└── dist/             # build output (gitignored)
-```
