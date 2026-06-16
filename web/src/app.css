@@ -4,7 +4,7 @@
    The Milk Interactive palette, type stacks, breakpoints, and the blink
    animation live here as Tailwind theme tokens, so components reach them as
    utilities: bg-paper, text-ink-soft, font-mono, lg:/ultra: variants,
-   animate-caret. Everything else is expressed inline in the components. */
+   animate-tick. Everything else is expressed inline in the components. */
 @theme {
     --color-paper: #ffffff;
     --color-ink: #000000;
@@ -22,8 +22,7 @@
      cascade — a px value buckets separately and would lose to lg at wide widths. */
     --breakpoint-ultra: 102.5rem;
 
-    /* The cursor caret (1.1s) and the loading tick (0.9s) share one keyframe. */
-    --animate-caret: blink 1.1s steps(1) infinite;
+    /* The loading tick (status line) uses this keyframe. */
     --animate-tick: blink 0.9s steps(1) infinite;
 }
 
@@ -31,6 +30,21 @@
     50% {
         opacity: 0;
     }
+}
+
+/* The lime "skim" line: a thin highlight that grazes the bottom of the text,
+   echoing the product name. Em-based, so it scales with font-size. Shared by
+   the header wordmark and inline emphasis (e.g. "shared" in the hero). */
+@utility skim-mark {
+    /* inline-block + fixed line-height so the mark sits identically whether the
+       element is a flex item (the wordmark) or inline text ("shared") — both
+       then measure the line from the same box bottom. */
+    display: inline-block;
+    line-height: 1.45;
+    background-image: linear-gradient(var(--color-lime), var(--color-lime));
+    background-repeat: no-repeat;
+    background-size: 100% 0.18em;
+    background-position: left 0 bottom 0.29em;
 }
 
 /* ---------- base ----------
@@ -57,13 +71,12 @@
         outline-offset: 2px;
     }
 
-    /* Reduced motion: instant scroll, and freeze the caret/tick blink to a
+    /* Reduced motion: instant scroll, and freeze the tick blink to a
      static lime strip (animation: none leaves opacity at 1). */
     @media (prefers-reduced-motion: reduce) {
         html {
             scroll-behavior: auto;
         }
-        .animate-caret,
         .animate-tick {
             animation: none;
         }

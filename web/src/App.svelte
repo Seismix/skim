@@ -93,12 +93,7 @@
 
 <div class="max-w-[1080px] mx-auto px-8 max-[620px]:px-[1.2rem]">
     <header class="flex items-center justify-between pt-6 pb-[1.4rem] border-b border-ink">
-        <span class="text-[1.35rem] font-medium tracking-[-0.03em] inline-flex items-center"
-            >skim<span
-                class="inline-block w-[0.42em] h-[1.05em] bg-lime ml-[0.12em] translate-y-[0.12em] animate-caret"
-                aria-hidden="true"
-            ></span></span
-        >
+        <span class="text-[3.5rem] font-medium tracking-[-0.03em] skim-mark">skim</span>
         <span class="font-mono text-[0.72rem] tracking-[0.04em] uppercase text-ink-soft">Social preview inspector</span>
     </header>
 
@@ -108,7 +103,7 @@
         </div>
         <h1 class="text-[1.12rem] font-normal tracking-normal leading-normal text-ink-soft">
             See how a link looks when it&rsquo;s
-            <em class="not-italic text-ink shadow-[inset_0_-0.16em_0_var(--color-lime)]">shared</em> &mdash; before it ships.
+            <em class="not-italic text-ink skim-mark">shared</em> &mdash; before it ships.
         </h1>
     </section>
 
