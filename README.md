@@ -6,6 +6,8 @@ skim extracts OpenGraph / Twitter / standard meta tags from any URL and renders 
 
 ![skim previewing a link across Facebook, Twitter/X, LinkedIn, Discord, and Slack, with diagnostics and a raw meta-tag grid](docs/screenshot.png)
 
+> The cards are **approximations** of how each platform renders a shared link — not pixel-perfect reproductions. Exact appearance varies by platform, client, and device, and shifts over time as the platforms change. Use skim to sanity-check your tags and layout, not to match a specific platform down to the pixel.
+
 ## Install
 
 With Go installed (1.26+):
