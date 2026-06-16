@@ -1,4 +1,4 @@
-module skim
+module github.com/Seismix/skim
 
 go 1.26
 

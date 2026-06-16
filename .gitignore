@@ -1,7 +1,10 @@
 # build artifacts
 /dist/
-/web/dist/
 /web/node_modules/
+
+# web/dist (the built UI) is intentionally committed: it's embedded via
+# //go:embed so the module is `go install`-able without a Node toolchain.
+# `make verify-dist` guards it against drifting from web/src.
 
 # os
 .DS_Store

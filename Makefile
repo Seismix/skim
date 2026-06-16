@@ -11,7 +11,7 @@ GO_LDFLAGS := -s -w
 # Fully static binaries (pure-Go DNS resolver) so they run on any distro / box.
 export CGO_ENABLED := 0
 
-.PHONY: all web dev dist run clean
+.PHONY: all web dev dist run clean verify-dist
 
 all: web
 	go build -ldflags "$(GO_LDFLAGS)" -o dist/skim .
@@ -19,6 +19,12 @@ all: web
 # Build the Svelte frontend into web/dist (embedded into the Go binary).
 web:
 	cd web && pnpm install && pnpm build
+
+# web/dist is committed (embedded via go:embed) so the module is `go install`-able
+# without a Node toolchain. Rebuild and fail if it drifted from web/src — run this
+# in CI / before tagging so a stale commit can't ship an old UI.
+verify-dist: web
+	git diff --exit-code -- web/dist
 
 # Frontend dev with HMR. Vite serves the UI and auto-runs the Go backend,
 # proxying /api to it — edit web/src/** and see changes live.

@@ -2,21 +2,33 @@
 
 Preview how a link looks when shared on social media — **including `localhost`** — without deploying.
 
-skim extracts OpenGraph / Twitter / standard meta tags from any URL and renders realistic preview cards for **Facebook, Twitter/X, LinkedIn, Discord, and Slack**, plus validation diagnostics and a raw meta-tag grid. 
+skim extracts OpenGraph / Twitter / standard meta tags from any URL and renders realistic preview cards for **Facebook, Twitter/X, LinkedIn, Discord, and Slack**, plus validation diagnostics and a raw meta-tag grid.
+
+## Install
+
+With Go installed (1.26+):
+
+```bash
+go install github.com/Seismix/skim@latest
+```
+
+The UI ships prebuilt and embedded, so there's no Node toolchain to install. This drops a `skim` binary in your `$GOBIN` (usually `~/go/bin`) — make sure that's on your `PATH`.
 
 ## Quick start
 
-Grab the binary for your OS from `dist/` (or build it — see below) and run it:
+Run it:
 
 ```bash
-./skim
+skim
 ```
 
 It starts a local server on a free port and opens your default browser. To pre-fill and auto-preview a URL:
 
 ```bash
-./skim http://localhost:3000
+skim http://localhost:3000
 ```
+
+(Building from source instead? The binary lands at `./dist/skim` — see [Building](#building).)
 
 You can type a bare host — `reddit.com` becomes `https://reddit.com`, while `localhost:3000` (and `127.0.0.1`, `*.localhost`) becomes `http://…`.
 
