@@ -17,6 +17,12 @@ importers:
       '@types/node':
         specifier: ^24.13.2
         version: 24.13.2
+      prettier:
+        specifier: ^3.8.4
+        version: 3.8.4
+      prettier-plugin-svelte:
+        specifier: ^3.5.2
+        version: 3.5.2(prettier@3.8.4)(svelte@5.56.3)
       svelte:
         specifier: ^5.56.3
         version: 5.56.3
@@ -449,6 +455,17 @@ packages:
     resolution: {integrity: sha512-FfR8sjd4em2T6fb3I2MwAJU7HWVMr9zba+enmQeeWFfCbm+UOC/0X4DS8XtpUTMwWMGbjKYP7xjfNekzyGmB3A==}
     engines: {node: ^10 || ^12 || >=14}
 
+  prettier-plugin-svelte@3.5.2:
+    resolution: {integrity: sha512-ItFouLvzSFE3ulNl4DKoWM3BGcbDCNVpIyy/Y3F2gC3aNiGLxtFUdffVqO5Z5hhYG+DFT5KULWaxmeFFpdbvaQ==}
+    peerDependencies:
+      prettier: ^3.0.0
+      svelte: ^3.2.0 || ^4.0.0-next.0 || ^5.0.0-next.0
+
+  prettier@3.8.4:
+    resolution: {integrity: sha512-N2MylSdi48+5N/6S5j+maeHbUSIzzZ5uOcX5Hm4QpV8Dkb1HFjfAKTKX6yNPJQD9AhcT3ifHNB66tWTTJDi11Q==}
+    engines: {node: '>=14'}
+    hasBin: true
+
   rolldown@1.0.3:
     resolution: {integrity: sha512-i00lAJ2ks1BYr7rjNjKC7BcqAS7nVfiT3QX1SI5aY+AFHblCmaUf9OE9dbdzDvW6dJxbi2ZCZiy9v3CcwOiX3g==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -837,6 +854,13 @@ snapshots:
       nanoid: 3.3.12
       picocolors: 1.1.1
       source-map-js: 1.2.1
+
+  prettier-plugin-svelte@3.5.2(prettier@3.8.4)(svelte@5.56.3):
+    dependencies:
+      prettier: 3.8.4
+      svelte: 5.56.3
+
+  prettier@3.8.4: {}
 
   rolldown@1.0.3:
     dependencies:
