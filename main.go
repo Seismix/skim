@@ -273,7 +273,13 @@ func normalizeURL(raw string) string {
 	if i := strings.IndexAny(host, "/?#"); i >= 0 {
 		host = host[:i]
 	}
-	if i := strings.LastIndex(host, ":"); i >= 0 {
+	// Strip the port, but keep bracketed IPv6 hosts ("[::1]", "[::1]:8080") whole —
+	// LastIndex(":") would otherwise chop inside the address.
+	if strings.HasPrefix(host, "[") {
+		if j := strings.IndexByte(host, ']'); j >= 0 {
+			host = host[:j+1]
+		}
+	} else if i := strings.LastIndex(host, ":"); i >= 0 {
 		host = host[:i] // strip port
 	}
 	if isLocalhost(strings.ToLower(host)) {
