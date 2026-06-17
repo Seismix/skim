@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Install web dependencies
+        run: pnpm --dir web install --frozen-lockfile
+
+      - name: Check formatting (prettier)
+        run: pnpm --dir web run format:check
+
+      - name: Check formatting (gofmt)
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "These files need gofmt:"; echo "$unformatted"; exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+      # The built UI is committed and embedded via go:embed. Rebuild it and fail
+      # if it drifted from web/src, so a stale commit can't ship an old frontend.
+      - name: Verify committed web/dist is up to date
+        run: |
+          pnpm --dir web run build
+          git diff --exit-code -- web/dist
+
+      - name: go test
+        run: go test ./...
+
+      - name: go build
+        run: go build -o /tmp/skim .
