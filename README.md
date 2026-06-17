@@ -16,7 +16,7 @@ With Go installed (1.26+):
 go install github.com/Seismix/skim@latest
 ```
 
-The UI ships prebuilt and embedded, so there's no Node toolchain to install. This drops a `skim` binary in your `$GOBIN` (usually `~/go/bin`) — make sure that's on your `PATH`.
+The UI ships prebuilt and embedded, so there's no Node toolchain to install. This drops a `skim` binary in your `$GOBIN` (usually `~/go/bin`, or `%USERPROFILE%\go\bin` on Windows) — make sure that's on your `PATH`.
 
 ## Quick start
 
