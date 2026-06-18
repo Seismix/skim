@@ -16,11 +16,11 @@
 
 {#if !src || failed}
     <div
-        class="flex items-center justify-center text-[#b0b0b0] font-mono text-[0.78rem] tracking-[0.04em] bg-[repeating-linear-gradient(135deg,#fafafa_0_10px,#f2f2f2_10px_20px)] {klass}"
+        class="flex items-center justify-center text-[#b0b0b0] dark:text-[#6b6e73] font-mono text-[0.78rem] tracking-[0.04em] bg-[repeating-linear-gradient(135deg,#fafafa_0_10px,#f2f2f2_10px_20px)] dark:bg-[repeating-linear-gradient(135deg,#1f2023_0_10px,#26282c_10px_20px)] {klass}"
         style={ratio ? `aspect-ratio:${ratio};` : "min-height:120px;"}
     >
         {failed ? "image failed to load" : "no og:image"}
     </div>
 {:else}
-    <img class="block bg-mist {klass}" src={proxied(src)} alt="" onerror={() => (failed = true)} />
+    <img class="block bg-mist dark:bg-[#1e1f22] {klass}" src={proxied(src)} alt="" onerror={() => (failed = true)} />
 {/if}

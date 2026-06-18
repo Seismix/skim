@@ -10,7 +10,8 @@
         inputUrl,
         metaEl = $bindable(),
         flash = false,
-    }: { og: OgData; inputUrl: string; metaEl?: HTMLElement; flash?: boolean } = $props();
+        dark = false,
+    }: { og: OgData; inputUrl: string; metaEl?: HTMLElement; flash?: boolean; dark?: boolean } = $props();
 
     let domain = $derived(getDomain(og.url || inputUrl));
     let isLarge = $derived(og.twitterCard === "summary_large_image");
@@ -66,7 +67,9 @@
      cards flow into a 2-col (then 3-col at `ultra`) grid to cut scrolling, with
      each column held at the card's true 524px instead of being crushed narrow. -->
 <main
-    class="max-w-[calc(524px+4rem)] mx-auto pt-4 px-8 pb-24 max-[620px]:px-[1.2rem] lg:max-w-[calc(1096px+4rem)] lg:grid lg:grid-cols-[repeat(2,minmax(0,524px))] lg:justify-center lg:gap-x-12 lg:gap-y-[2.75rem] lg:items-start ultra:max-w-[calc(1668px+4rem)] ultra:grid-cols-[repeat(3,minmax(0,524px))]"
+    class="max-w-[calc(524px+4rem)] mx-auto pt-4 px-8 pb-24 max-[620px]:px-[1.2rem] lg:max-w-[calc(1096px+4rem)] lg:grid lg:grid-cols-[repeat(2,minmax(0,524px))] lg:justify-center lg:gap-x-12 lg:gap-y-[2.75rem] lg:items-start ultra:max-w-[calc(1668px+4rem)] ultra:grid-cols-[repeat(3,minmax(0,524px))] {dark
+        ? 'theme-dark'
+        : ''}"
 >
     {#if diags.length}
         <Section name="Diagnostics" spec={`${diags.length} issue${diags.length > 1 ? "s" : ""}`} wide>
@@ -75,14 +78,18 @@
     {/if}
 
     <Section name="Facebook / Open Graph" spec="1.91 : 1">
-        <div class="max-w-[524px] border border-line bg-paper">
+        <div class="max-w-[524px] border border-line dark:border-[#393a3b] bg-paper dark:bg-[#242526]">
             <Img src={og.image} ratio="1.91/1" class="w-full aspect-[1.91/1] object-cover" />
-            <div class="py-[0.7rem] px-4 bg-mist">
-                <div class="font-mono text-[0.7rem] text-[#65676b] uppercase tracking-[0.02em]">{domain}</div>
-                <div class="text-base font-semibold text-[#1c1e21] my-[0.18rem] leading-[1.3] line-clamp-2">
+            <div class="py-[0.7rem] px-4 bg-mist dark:bg-[#3a3b3c]">
+                <div class="font-mono text-[0.7rem] text-[#65676b] dark:text-[#b0b3b8] uppercase tracking-[0.02em]">
+                    {domain}
+                </div>
+                <div
+                    class="text-base font-semibold text-[#1c1e21] dark:text-[#e4e6eb] my-[0.18rem] leading-[1.3] line-clamp-2"
+                >
                     {og.title || "Untitled"}
                 </div>
-                <div class="text-[0.86rem] text-[#65676b] line-clamp-1">{og.description}</div>
+                <div class="text-[0.86rem] text-[#65676b] dark:text-[#b0b3b8] line-clamp-1">{og.description}</div>
             </div>
         </div>
         {@render cap()}
@@ -90,24 +97,32 @@
 
     {#if isLarge}
         <Section name="Twitter / X" spec="summary_large_image · 2 : 1">
-            <div class="max-w-[524px] border border-line rounded-2xl overflow-hidden bg-paper">
+            <div
+                class="max-w-[524px] border border-line dark:border-[#38444d] rounded-2xl overflow-hidden bg-paper dark:bg-[#15202b]"
+            >
                 <Img src={og.image} ratio="2/1" class="w-full aspect-[2/1] object-cover" />
                 <div class="py-[0.7rem] px-[0.9rem]">
-                    <div class="text-[0.95rem] font-semibold text-[#0f1419] line-clamp-2">{og.title || "Untitled"}</div>
-                    <div class="text-[0.9rem] text-[#536471] line-clamp-2">{og.description}</div>
-                    <div class="font-mono text-[0.8rem] text-[#536471] mt-[0.15rem]">{domain}</div>
+                    <div class="text-[0.95rem] font-semibold text-[#0f1419] dark:text-[#e7e9ea] line-clamp-2">
+                        {og.title || "Untitled"}
+                    </div>
+                    <div class="text-[0.9rem] text-[#536471] dark:text-[#8b98a5] line-clamp-2">{og.description}</div>
+                    <div class="font-mono text-[0.8rem] text-[#536471] dark:text-[#8b98a5] mt-[0.15rem]">{domain}</div>
                 </div>
             </div>
             {@render cap()}
         </Section>
     {:else}
         <Section name="Twitter / X" spec="summary · 1 : 1">
-            <div class="max-w-[524px] flex border border-line rounded-2xl overflow-hidden bg-paper">
+            <div
+                class="max-w-[524px] flex border border-line dark:border-[#38444d] rounded-2xl overflow-hidden bg-paper dark:bg-[#15202b]"
+            >
                 <Img src={og.image} class="w-[130px] min-h-[130px] object-cover shrink-0" />
                 <div class="py-[0.7rem] px-[0.9rem] flex flex-col justify-center overflow-hidden">
-                    <div class="text-[0.92rem] font-semibold text-[#0f1419] line-clamp-2">{og.title || "Untitled"}</div>
-                    <div class="text-[0.86rem] text-[#536471] line-clamp-2">{og.description}</div>
-                    <div class="font-mono text-[0.78rem] text-[#536471]">{domain}</div>
+                    <div class="text-[0.92rem] font-semibold text-[#0f1419] dark:text-[#e7e9ea] line-clamp-2">
+                        {og.title || "Untitled"}
+                    </div>
+                    <div class="text-[0.86rem] text-[#536471] dark:text-[#8b98a5] line-clamp-2">{og.description}</div>
+                    <div class="font-mono text-[0.78rem] text-[#536471] dark:text-[#8b98a5]">{domain}</div>
                 </div>
             </div>
             {@render cap()}
@@ -115,35 +130,46 @@
     {/if}
 
     <Section name="LinkedIn" spec="1.91 : 1">
-        <div class="max-w-[524px] border border-line bg-paper">
+        <div class="max-w-[524px] border border-line dark:border-[#ffffff26] bg-paper dark:bg-[#1b1f23]">
             <Img src={og.image} ratio="1.91/1" class="w-full aspect-[1.91/1] object-cover" />
-            <div class="py-[0.65rem] px-[0.95rem] bg-paper border-t border-line">
-                <div class="text-[0.92rem] font-semibold text-[#000000e6] truncate">{og.title || "Untitled"}</div>
-                <div class="font-mono text-[0.72rem] text-[#00000099] mt-[0.1rem]">{domain}</div>
+            <div
+                class="py-[0.65rem] px-[0.95rem] bg-paper dark:bg-[#1b1f23] border-t border-line dark:border-[#ffffff26]"
+            >
+                <div class="text-[0.92rem] font-semibold text-[#000000e6] dark:text-[#ffffffe6] truncate">
+                    {og.title || "Untitled"}
+                </div>
+                <div class="font-mono text-[0.72rem] text-[#00000099] dark:text-[#ffffff99] mt-[0.1rem]">{domain}</div>
             </div>
         </div>
         {@render cap()}
     </Section>
 
     <Section name="Discord" spec="embed">
-        <!-- Discord stays dark — that is accurate to the platform. -->
-        <div class="max-w-[432px] bg-[#2b2d31] border-l-4 border-[#5865f2] rounded-[4px] py-[0.7rem] px-4">
-            <div class="text-base font-semibold text-[#00a8fc] mb-[0.3rem] leading-[1.3]">{og.title || "Untitled"}</div>
+        <!-- Discord ships Light/Dark/Midnight themes; base classes are the light
+             embed, dark: holds the dark embed. The toggle flips both. -->
+        <div
+            class="max-w-[432px] bg-[#f2f3f5] dark:bg-[#2b2d31] border-l-4 border-[#5865f2] rounded-[4px] py-[0.7rem] px-4"
+        >
+            <div class="text-base font-semibold text-[#006ce7] dark:text-[#00a8fc] mb-[0.3rem] leading-[1.3]">
+                {og.title || "Untitled"}
+            </div>
             {#if og.description}
                 <!-- Discord shows several lines and keeps source paragraph breaks. -->
-                <div class="text-[0.86rem] text-[#dbdee1] leading-[1.4] whitespace-pre-wrap line-clamp-[7]">
+                <div
+                    class="text-[0.86rem] text-[#4e5058] dark:text-[#dbdee1] leading-[1.4] whitespace-pre-wrap line-clamp-[7]"
+                >
                     {og.description}
                 </div>
             {/if}
             {#if og.image && !icon}
                 <Img
                     src={og.image}
-                    class="max-w-[min(400px,100%)] max-h-[225px] w-auto rounded-[4px] bg-[#1e1f22]! mt-[0.6rem]"
+                    class="max-w-[min(400px,100%)] max-h-[225px] w-auto rounded-[4px] bg-[#e3e5e8]! dark:bg-[#1e1f22]! mt-[0.6rem]"
                 />
             {/if}
             {#if og.siteName}
                 <!-- footer: site favicon + og:site_name, as Discord renders it -->
-                <div class="flex items-center gap-2 mt-[0.65rem] text-[0.78rem] text-[#dbdee1]">
+                <div class="flex items-center gap-2 mt-[0.65rem] text-[0.78rem] text-[#4e5058] dark:text-[#dbdee1]">
                     {#if dcFootIcon}
                         <img
                             class="w-5 h-5 rounded-full object-cover shrink-0"
@@ -160,7 +186,11 @@
     </Section>
 
     <Section name="Slack" spec="unfurl">
-        <div class="max-w-[524px] border border-line border-l-4 border-l-[#1d9bd1] py-[0.7rem] px-4 bg-paper">
+        <!-- dark:border-l re-asserts the accent: the dark all-side shorthand sorts
+             after the base left longhand and would otherwise recolor the bar. -->
+        <div
+            class="max-w-[524px] border border-line dark:border-[#ffffff1a] border-l-4 border-l-[#1d9bd1] dark:border-l-[#1d9bd1] py-[0.7rem] px-4 bg-paper dark:bg-[#1a1d21]"
+        >
             <div class="flex items-center gap-[0.4rem] mb-[0.22rem]">
                 {#if og.favicon}
                     <img
@@ -170,10 +200,12 @@
                         onerror={hideBroken}
                     />
                 {/if}
-                <span class="text-[0.88rem] font-bold text-[#1d1c1d]">{og.siteName || domain}</span>
+                <span class="text-[0.88rem] font-bold text-[#1d1c1d] dark:text-[#d1d2d3]">{og.siteName || domain}</span>
             </div>
-            <div class="text-[0.92rem] font-semibold text-[#1264a3] mb-[0.2rem]">{og.title || "Untitled"}</div>
-            <div class="text-[0.88rem] text-[#454245] mb-2 leading-[1.4]">{og.description}</div>
+            <div class="text-[0.92rem] font-semibold text-[#1264a3] dark:text-[#1d9bd1] mb-[0.2rem]">
+                {og.title || "Untitled"}
+            </div>
+            <div class="text-[0.88rem] text-[#454245] dark:text-[#ababad] mb-2 leading-[1.4]">{og.description}</div>
             {#if og.image && !icon}
                 <Img src={og.image} class="w-auto max-w-full max-h-[280px] rounded-[8px]" />
             {/if}

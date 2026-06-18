@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Manual dark variant for the preview cards. `dark:` utilities activate only
+   inside an element carrying `.theme-dark` (set on the results container when the
+   preview-theme toggle is on) — skim's own chrome stays light; only the platform
+   cards opt into dark. This intentionally overrides Tailwind's default
+   prefers-color-scheme dark variant. :where() keeps specificity at a single
+   class, so base vs. dark resolves purely by source order. */
+@custom-variant dark (&:where(.theme-dark, .theme-dark *));
+
 /* ---------- design system ----------
    The Milk Interactive palette, type stacks, breakpoints, and the blink
    animation live here as Tailwind theme tokens, so components reach them as

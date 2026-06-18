@@ -18,6 +18,24 @@
     let flashMeta = $state(false);
     let flashTimer: ReturnType<typeof setTimeout> | undefined;
 
+    // Preview theme: render the platform cards in their light or dark variants.
+    // skim's own chrome stays light regardless — only the cards opt into dark.
+    // Persisted so the choice survives reloads.
+    const THEME_KEY = "skim:previewTheme";
+    let dark = $state(false);
+    try {
+        dark = localStorage.getItem(THEME_KEY) === "dark";
+    } catch {
+        /* storage may be blocked (private mode); default to light */
+    }
+    $effect(() => {
+        try {
+            localStorage.setItem(THEME_KEY, dark ? "dark" : "light");
+        } catch {
+            /* ignore — toggle still works for the session */
+        }
+    });
+
     // Prefill + auto-run from ?url= (CLI / shared link).
     const preset = new URLSearchParams(location.search).get("url");
     if (preset) url = preset;
@@ -94,7 +112,25 @@
 <div class="max-w-[1080px] mx-auto px-8 max-[620px]:px-[1.2rem]">
     <header class="flex items-center justify-between pt-6 pb-[1.4rem] border-b border-ink">
         <span class="text-[3.5rem] font-medium tracking-[-0.03em] skim-mark">skim</span>
-        <span class="font-mono text-[0.72rem] tracking-[0.04em] uppercase text-ink-soft">Social preview inspector</span>
+        <div class="flex flex-col items-end gap-[0.55rem]">
+            <span class="font-mono text-[0.72rem] tracking-[0.04em] uppercase text-ink-soft"
+                >Social preview inspector</span
+            >
+            <button
+                type="button"
+                role="switch"
+                aria-checked={dark}
+                aria-label="Toggle preview dark mode"
+                class="group font-mono text-[0.72rem] tracking-[0.04em] uppercase text-ink-soft bg-transparent border-none p-0 cursor-pointer inline-flex items-baseline gap-[0.5em]"
+                onclick={() => (dark = !dark)}
+            >
+                previews
+                <span
+                    class="text-ink px-[0.25em] border-b border-lime transition-colors duration-[120ms] group-hover:bg-lime"
+                    >{dark ? "dark" : "light"}</span
+                >
+            </button>
+        </div>
     </header>
 
     <section class="pt-[2.75rem] pb-[1.75rem] max-w-[600px] mx-auto text-center max-[620px]:pt-12 max-[620px]:pb-8">
@@ -142,7 +178,7 @@
 <!-- Results sit outside .wrap so the wide-screen grid can break past the 1080px
      reading column; the header/hero/console/footer stay centered and narrow. -->
 {#if data}
-    <Results og={data} inputUrl={lastUrl} bind:metaEl flash={flashMeta} />
+    <Results og={data} inputUrl={lastUrl} bind:metaEl flash={flashMeta} {dark} />
 {/if}
 
 <div class="max-w-[1080px] mx-auto px-8 max-[620px]:px-[1.2rem]">
