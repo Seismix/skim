@@ -2,7 +2,7 @@
 
 Preview how a link looks when shared on social media — **including `localhost`** — without deploying.
 
-skim extracts OpenGraph / Twitter / standard meta tags from any URL and renders realistic preview cards for **Facebook, Twitter/X, LinkedIn, Discord, and Slack**, plus validation diagnostics and a raw meta-tag grid.
+skim extracts OpenGraph / Twitter / standard meta tags from any URL — one or several at once — and renders realistic preview cards for **Facebook, Twitter/X, LinkedIn, Discord, and Slack**, plus validation diagnostics and a raw meta-tag grid.
 
 <img src="docs/screenshot.png" alt="skim previewing a link across Facebook, Twitter/X, LinkedIn, Discord, and Slack, with diagnostics and a raw meta-tag grid" width="1000">
 
@@ -36,6 +36,8 @@ skim http://localhost:3000
 
 You can type a bare host — `reddit.com` becomes `https://reddit.com`, while `localhost:3000` (and `127.0.0.1`, `*.localhost`) becomes `http://…`.
 
+Comparing several links? Add more inputs with the **+** button (or paste a comma-separated list into a single box), then skim renders a stacked card set per URL. Each is fetched independently and concurrently, so one bad link won't sink the rest, and the address bar keeps a `?url=` per link so the comparison stays shareable.
+
 Flags: `--port N` (fixed port), `--no-open` (don't launch the browser), `--user-agent "…"`. skim binds loopback (`127.0.0.1`) only — it's a personal local tool. Press Ctrl+C to stop — the listener closes and the port frees.
 
 By default skim sends the OpenGraph crawler User-Agent (`facebookexternalhit`), since many sites serve share metadata **only** to recognized crawlers — Reddit, for example, returns an anti-bot page otherwise. This makes skim see what Facebook / Discord / Slack see. Override with `--user-agent`.
@@ -47,10 +49,28 @@ The localhost feature dictates the architecture. A browser page can't `fetch()` 
 ```text
 skim binary
 ├── GET  /             → serves the embedded Svelte UI (web/dist)
-├── POST /api/fetch-og → fetches the URL on THIS machine, parses meta, returns JSON
+├── POST /api/fetch-og → fetches one URL (or a batch of them) on THIS machine, parses meta, returns JSON
 └── GET  /api/img      → proxies a preview image same-origin, so browser tracking
                           protection / hotlink checks don't block it
 ```
+
+## Scripting (JSON)
+
+`/api/fetch-og` is a plain JSON endpoint, handy for scripts and agents. Post a single `url`:
+
+```bash
+curl -s localhost:PORT/api/fetch-og -d '{"url":"example.com"}'
+# → { "title": "...", "description": "...", "image": "...", "allMeta": { ... } }
+```
+
+…or a `urls` array to fetch a batch concurrently. The response is one entry per input URL, each with its own `data` or `error`, in order:
+
+```bash
+curl -s localhost:PORT/api/fetch-og -d '{"urls":["example.com","localhost:3000"]}'
+# → { "results": [ { "url": "...", "data": { ... } }, { "url": "...", "error": "..." } ] }
+```
+
+Grab `PORT` from the startup banner, or pin it with `--port`.
 
 ## Building
 
