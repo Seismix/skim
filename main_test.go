@@ -104,6 +104,44 @@ func TestHandleFetchOGTitleFallback(t *testing.T) {
 	}
 }
 
+func TestHandleFetchOGBatch(t *testing.T) {
+	const html = `<html><head><meta property="og:title" content="Batch Title"></head><body></body></html>`
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		io.WriteString(w, html)
+	}))
+	defer srv.Close()
+
+	// One reachable URL, one empty entry: the batch should report a result per
+	// input in order, the empty one carrying an error rather than failing the set.
+	body := strings.NewReader(`{"urls":[` + strconv.Quote(srv.URL) + `,""]}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/fetch-og", body)
+	rec := httptest.NewRecorder()
+	handleFetchOG(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want 200", res.StatusCode)
+	}
+
+	var out struct {
+		Results []fetchResult `json:"results"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&out); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if len(out.Results) != 2 {
+		t.Fatalf("got %d results, want 2", len(out.Results))
+	}
+	if out.Results[0].Data == nil || out.Results[0].Data.Title != "Batch Title" {
+		t.Errorf("results[0] = %+v, want data with Title %q", out.Results[0], "Batch Title")
+	}
+	if out.Results[1].Error == "" {
+		t.Errorf("results[1] error = %q, want a non-empty error for the empty URL", out.Results[1].Error)
+	}
+}
+
 // fetchOG serves html from a throwaway server, runs it through handleFetchOG,
 // and returns the parsed result plus the server's base URL (for resolving the
 // relative-URL assertions).

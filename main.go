@@ -23,6 +23,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -129,53 +130,101 @@ type ogData struct {
 	AllMeta        map[string]string `json:"allMeta"`
 }
 
+// fetchResult is one entry of a batch response: the input URL paired with its
+// extracted data or a per-URL error, so one bad link never fails the whole set.
+type fetchResult struct {
+	URL   string  `json:"url"`
+	Data  *ogData `json:"data,omitempty"`
+	Error string  `json:"error,omitempty"`
+}
+
 func handleFetchOG(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		writeErr(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
+	// Accept either a single "url" (legacy shape, returns one ogData) or a "urls"
+	// array (batch shape, returns {"results":[...]}). The UI sends "urls"; the
+	// single form stays for shared links and existing API callers.
 	var body struct {
-		URL string `json:"url"`
+		URL  string   `json:"url"`
+		URLs []string `json:"urls"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeErr(w, http.StatusBadRequest, "Invalid JSON body")
 		return
 	}
+
+	if len(body.URLs) > 0 {
+		// Fetch every URL concurrently; preserve input order via an indexed slice.
+		results := make([]fetchResult, len(body.URLs))
+		var wg sync.WaitGroup
+		for i, u := range body.URLs {
+			results[i].URL = u
+			if strings.TrimSpace(u) == "" {
+				results[i].Error = "URL is required"
+				continue
+			}
+			wg.Add(1)
+			go func(i int, u string) {
+				defer wg.Done()
+				data, err := skim(r.Context(), u)
+				if err != nil {
+					results[i].Error = err.Error()
+					return
+				}
+				results[i].Data = data
+			}(i, u)
+		}
+		wg.Wait()
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"results": results})
+		return
+	}
+
 	if body.URL == "" {
 		writeErr(w, http.StatusBadRequest, "URL is required")
 		return
 	}
-
-	// Bare hosts get a scheme: http for localhost, https for everything else.
-	target := normalizeURL(body.URL)
-	parsed, err := url.Parse(target)
-	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") {
-		writeErr(w, http.StatusBadRequest, "Only HTTP/HTTPS URLs are allowed")
+	data, err := skim(r.Context(), body.URL)
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(data)
+}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+// skim fetches rawURL on this machine and extracts its OpenGraph / Twitter /
+// standard meta tags into an ogData. The returned error is safe to surface to
+// the caller (it carries no internal state).
+func skim(ctx context.Context, rawURL string) (*ogData, error) {
+	// Bare hosts get a scheme: http for localhost, https for everything else.
+	target := normalizeURL(rawURL)
+	parsed, err := url.Parse(target)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") {
+		return nil, fmt.Errorf("only HTTP/HTTPS URLs are allowed")
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, "Failed to build request: "+err.Error())
-		return
+		return nil, fmt.Errorf("failed to build request: %w", err)
 	}
 	req.Header.Set("User-Agent", userAgent)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, "Failed to fetch URL: "+err.Error())
-		return
+		return nil, fmt.Errorf("failed to fetch URL: %w", err)
 	}
 	defer resp.Body.Close()
 
 	doc, err := goquery.NewDocumentFromReader(io.LimitReader(resp.Body, 5<<20))
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, "Failed to parse HTML: "+err.Error())
-		return
+		return nil, fmt.Errorf("failed to parse HTML: %w", err)
 	}
 
 	meta := map[string]string{}
@@ -216,8 +265,7 @@ func handleFetchOG(w http.ResponseWriter, r *http.Request) {
 	data.Image = resolveURL(parsed, data.Image)
 	data.Favicon = resolveURL(parsed, data.Favicon)
 
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(data)
+	return &data, nil
 }
 
 // handleImg proxies an external image through this server so it loads as a
