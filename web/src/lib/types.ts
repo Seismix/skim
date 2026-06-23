@@ -16,3 +16,11 @@ export interface OgData {
     favicon: string;
     allMeta: Record<string, string>;
 }
+
+// One entry of a batch skim: the input URL paired with its data or a per-URL
+// error. Mirrors the backend `fetchResult` shape.
+export interface FetchResult {
+    url: string;
+    data?: OgData;
+    error?: string;
+}
