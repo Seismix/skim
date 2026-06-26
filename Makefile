@@ -6,7 +6,9 @@
 #   make run ARGS="http://localhost:3000"
 #   make clean
 
-GO_LDFLAGS := -s -w
+# Version stamped into the binary (-v); derived from git, overridable: make VERSION=x.y.z
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
+GO_LDFLAGS := -s -w -X main.version=$(VERSION)
 
 # Fully static binaries (pure-Go DNS resolver) so they run on any distro / box.
 export CGO_ENABLED := 0

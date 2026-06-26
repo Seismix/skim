@@ -22,6 +22,7 @@ import (
 	"os/signal"
 	"regexp"
 	"runtime"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"syscall"
@@ -44,12 +45,38 @@ const defaultUA = "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit
 
 var userAgent = defaultUA
 
+// version is stamped at build time via -ldflags "-X main.version=...". When unset
+// (e.g. `go install ...@v1.2.3`), it falls back to the module version from the
+// embedded build info — see buildVersion.
+var version = "dev"
+
+// buildVersion resolves the version to print for -v. A linker-stamped version
+// wins; otherwise we read the module version baked in by `go install pkg@ver`.
+func buildVersion() string {
+	if version != "dev" {
+		return version
+	}
+	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" && info.Main.Version != "(devel)" {
+		return info.Main.Version
+	}
+	return version
+}
+
 func main() {
 	port := flag.Int("port", 0, "port to listen on (0 = pick a free one)")
 	noOpen := flag.Bool("no-open", false, "do not open the browser on launch")
 	quiet := flag.Bool("quiet", false, "suppress startup/shutdown banners (used by the dev server)")
 	uaFlag := flag.String("user-agent", defaultUA, "User-Agent for outbound fetches (default mimics the OpenGraph crawler)")
+	var showVersion bool
+	flag.BoolVar(&showVersion, "v", false, "print the version and exit")
+	flag.BoolVar(&showVersion, "version", false, "print the version and exit")
 	flag.Parse()
+
+	if showVersion {
+		fmt.Printf("skim %s\n", buildVersion())
+		return
+	}
+
 	userAgent = *uaFlag
 
 	// Optional positional arg: a URL to pre-fill and auto-preview.

@@ -38,7 +38,7 @@ You can type a bare host — `reddit.com` becomes `https://reddit.com`, while `l
 
 Comparing several links? Add more inputs with the **+** button (or paste a comma-separated list into a single box), then skim renders a stacked card set per URL. Each is fetched independently and concurrently, so one bad link won't sink the rest, and the address bar keeps a `?url=` per link so the comparison stays shareable.
 
-Flags: `--port N` (fixed port), `--no-open` (don't launch the browser), `--user-agent "…"`. skim binds loopback (`127.0.0.1`) only — it's a personal local tool. Press Ctrl+C to stop — the listener closes and the port frees.
+Flags: `--port N` (fixed port), `--no-open` (don't launch the browser), `--user-agent "…"`, `-v` (print the version and exit). skim binds loopback (`127.0.0.1`) only — it's a personal local tool. Press Ctrl+C to stop — the listener closes and the port frees.
 
 By default skim sends the OpenGraph crawler User-Agent (`facebookexternalhit`), since many sites serve share metadata **only** to recognized crawlers — Reddit, for example, returns an anti-bot page otherwise. This makes skim see what Facebook / Discord / Slack see. Override with `--user-agent`.
 
