@@ -45,6 +45,10 @@
         return list;
     });
 
+    // WhatsApp's three unfurl shapes, driven by the image it gets: a banner, a
+    // compact row with a square thumb (icon-sized image), or text only (none).
+    let waSpec = $derived(!og.image ? "bubble" : icon ? "bubble · thumb" : "bubble · 1.91 : 1");
+
     let titleLen = $derived((og.title || "").length);
     let descLen = $derived((og.description || "").length);
     let imgInfo = $derived(
@@ -60,6 +64,20 @@
     <div class="font-mono text-[0.72rem] text-ink-soft tracking-[0.03em] mt-[0.7rem] [&_b]:text-ink [&_b]:font-medium">
         title <b>{titleLen}</b>ch · desc <b>{descLen}</b>ch · image <b>{imgInfo}</b>
     </div>
+{/snippet}
+
+<!-- WhatsApp's unfurl text, identical in all three shapes — only its box moves
+     (under the banner, or beside the thumb). -->
+{#snippet waText()}
+    <div class="text-[0.88rem] font-medium text-[#111b21] dark:text-[#e9edef] leading-[1.3] line-clamp-2">
+        {og.title || "Untitled"}
+    </div>
+    {#if og.description}
+        <div class="text-[0.8rem] text-[#667781] dark:text-[#8696a0] leading-[1.35] line-clamp-2 mt-[0.1rem]">
+            {og.description}
+        </div>
+    {/if}
+    <div class="font-mono text-[0.72rem] text-[#667781] dark:text-[#8696a0] mt-[0.15rem] truncate">{domain}</div>
 {/snippet}
 
 <!-- .results lives outside .wrap (see App.svelte) so the grid can break past the
@@ -209,6 +227,38 @@
             {#if og.image && !icon}
                 <Img src={og.image} class="w-auto max-w-full max-h-[280px] rounded-[8px]" />
             {/if}
+        </div>
+        {@render cap()}
+    </Section>
+
+    <Section name="WhatsApp" spec={waSpec}>
+        <!-- WhatsApp unfurls *inside* the outgoing chat bubble (green on both
+             themes), keeping the sent link as text underneath. The preview block
+             is a translucent black wash rather than a fixed color, so it darkens
+             whichever green sits behind it. -->
+        <div
+            class="max-w-[524px] bg-[#d9fdd3] dark:bg-[#005c4b] rounded-[7.5px] p-[3px] shadow-[0_1px_0.5px_#0b141a21]"
+        >
+            <div class="bg-black/[0.05] dark:bg-black/[0.13] rounded-[6px] overflow-hidden">
+                {#if og.image && !icon}
+                    <Img src={og.image} ratio="1.91/1" class="w-full aspect-[1.91/1] object-cover" />
+                    <div class="py-[0.5rem] px-[0.6rem]">{@render waText()}</div>
+                {:else}
+                    <!-- An icon-sized image demotes the banner to a square thumb;
+                         with no image at all the row is text only. -->
+                    <div class="flex items-center gap-[0.6rem] py-[0.5rem] px-[0.6rem]">
+                        <div class="flex-1 min-w-0">{@render waText()}</div>
+                        {#if icon}
+                            <Img src={og.image} class="w-[76px] h-[76px] rounded-[4px] object-cover shrink-0" />
+                        {/if}
+                    </div>
+                {/if}
+            </div>
+            <div
+                class="py-[0.3rem] px-[0.35rem] text-[0.9rem] leading-[1.35] text-[#027eb5] dark:text-[#53bdeb] line-clamp-2 [word-break:break-all]"
+            >
+                {og.url || inputUrl}
+            </div>
         </div>
         {@render cap()}
     </Section>

@@ -155,7 +155,7 @@
 
     <section class="pt-[2.75rem] pb-[1.75rem] max-w-[600px] mx-auto text-center max-[620px]:pt-12 max-[620px]:pb-8">
         <div class="font-mono text-[0.72rem] tracking-[0.22em] uppercase text-ink-soft mb-[0.85rem]">
-            Open Graph · Twitter · LinkedIn · Discord · Slack
+            Open Graph · Twitter · LinkedIn · Discord · Slack · WhatsApp
         </div>
         <h1 class="text-[1.12rem] font-normal tracking-normal leading-normal text-ink-soft">
             See how a link looks when it&rsquo;s
