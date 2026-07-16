@@ -40,7 +40,7 @@ var uiFS embed.FS
 // defaultUA mimics the canonical OpenGraph crawler. Sites commonly serve their
 // share metadata only to recognized crawlers (Reddit, for example, returns an
 // anti-bot landing page otherwise), so this makes skim see what Facebook /
-// Discord / Slack actually see. Override with --user-agent.
+// WhatsApp / Discord / Slack actually see. Override with --user-agent.
 const defaultUA = "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)"
 
 var userAgent = defaultUA

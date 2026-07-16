@@ -2,7 +2,7 @@
 
 Preview how a link looks when shared on social media — **including `localhost`** — without deploying.
 
-skim extracts OpenGraph / Twitter / standard meta tags from any URL — one or several at once — and renders realistic preview cards for **Facebook, Twitter/X, LinkedIn, Discord, and Slack**, plus validation diagnostics and a raw meta-tag grid.
+skim extracts OpenGraph / Twitter / standard meta tags from any URL — one or several at once — and renders realistic preview cards for **Facebook, Twitter/X, LinkedIn, Discord, Slack, and WhatsApp**, plus validation diagnostics and a raw meta-tag grid.
 
 <img src="docs/screenshot.png" alt="skim previewing a link across Facebook, Twitter/X, LinkedIn, Discord, and Slack, with diagnostics and a raw meta-tag grid" width="1000">
 
@@ -40,7 +40,7 @@ Comparing several links? Add more inputs with the **+** button (or paste a comma
 
 Flags: `--port N` (fixed port), `--no-open` (don't launch the browser), `--user-agent "…"`, `-v` (print the version and exit). skim binds loopback (`127.0.0.1`) only — it's a personal local tool. Press Ctrl+C to stop — the listener closes and the port frees.
 
-By default skim sends the OpenGraph crawler User-Agent (`facebookexternalhit`), since many sites serve share metadata **only** to recognized crawlers — Reddit, for example, returns an anti-bot page otherwise. This makes skim see what Facebook / Discord / Slack see. Override with `--user-agent`.
+By default skim sends the OpenGraph crawler User-Agent (`facebookexternalhit`), since many sites serve share metadata **only** to recognized crawlers — Reddit, for example, returns an anti-bot page otherwise. This makes skim see what Facebook / WhatsApp / Discord / Slack see. Override with `--user-agent`.
 
 ## Why a local server at all?
 
