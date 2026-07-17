@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -162,6 +164,40 @@ func TestHandleFetchOGBatch(t *testing.T) {
 	}
 	if out.Results[1].Error == "" {
 		t.Errorf("results[1] error = %q, want a non-empty error for the empty URL", out.Results[1].Error)
+	}
+}
+
+// TestPlatformRegistryInSync is the drift guard between the Go and Svelte halves
+// of the platform registry. platformIDs (the wire contract), the PLATFORMS list
+// in platforms.ts, and the card snippets
+// in Results.svelte (one per id, rendered by lookup) describe the same set —
+// this test fails the build when they disagree, so adding a platform to one
+// place can't silently ship without the others.
+func TestPlatformRegistryInSync(t *testing.T) {
+	src, err := os.ReadFile("web/src/lib/platforms.ts")
+	if err != nil {
+		t.Fatalf("read platforms.ts: %v", err)
+	}
+	var ids []string
+	for _, m := range regexp.MustCompile(`\bid:\s*"([a-z]+)"`).FindAllStringSubmatch(string(src), -1) {
+		ids = append(ids, m[1])
+	}
+	if !slices.Equal(ids, platformIDs) {
+		t.Errorf("platform registries drifted: main.go platformIDs = %v, platforms.ts = %v — the lists must match, order included", platformIDs, ids)
+	}
+
+	svelte, err := os.ReadFile("web/src/components/Results.svelte")
+	if err != nil {
+		t.Fatalf("read Results.svelte: %v", err)
+	}
+	snippets := map[string]bool{}
+	for _, m := range regexp.MustCompile(`\{#snippet ([a-z]+)\(\)\}`).FindAllStringSubmatch(string(svelte), -1) {
+		snippets[m[1]] = true
+	}
+	for _, id := range platformIDs {
+		if !snippets[id] {
+			t.Errorf("Results.svelte has no {#snippet %s()} — the platform is registered but its card can never render", id)
+		}
 	}
 }
 

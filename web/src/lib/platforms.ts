@@ -1,6 +1,7 @@
 // The platforms skim renders, in card order. `id` is the wire contract: it's what
 // the API's `platforms` param accepts, so these ids are mirrored by platformIDs
-// in main.go.
+// in main.go — TestPlatformRegistryInSync (there) fails the build if the lists
+// drift, or if Results.svelte lacks a card snippet for an id listed here.
 //
 // `label` is the platform's short name; `card` is the fuller heading its preview
 // card carries. Both are UI-only.

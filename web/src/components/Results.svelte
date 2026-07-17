@@ -107,7 +107,8 @@
 <!-- One snippet per platform card, holding just the card's markup — the shared
      Section scaffolding and the cap line live in the {#each} that renders them.
      Adding a platform = a registry entry in platforms.ts, a snippet named after
-     its id here, and the matching case in main.go's renderPlatforms. -->
+     its id here, and the matching case in main.go's renderPlatforms
+     (TestPlatformRegistryInSync holds all three together). -->
 
 {#snippet facebook()}
     <div class="max-w-[524px] border border-line dark:border-[#393a3b] bg-paper dark:bg-[#242526]">

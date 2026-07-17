@@ -185,7 +185,9 @@ type fetchResult struct {
 
 // platformIDs are the platforms skim reports on, in card order. These ids are the
 // wire contract: they're what the `platforms` request field accepts and what keys
-// the response block.
+// the response block. web/src/lib/platforms.ts carries the same list —
+// TestPlatformRegistryInSync fails the build if the two lists (or the card
+// gates in Results.svelte) drift.
 var platformIDs = []string{"facebook", "twitter", "linkedin", "discord", "slack", "whatsapp", "imessage"}
 
 // platformRender is what a single platform actually shows for a page.
