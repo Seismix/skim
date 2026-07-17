@@ -161,12 +161,17 @@ type ogData struct {
 	AllMeta        map[string]string `json:"allMeta"`
 
 	// ImageKind is derived, not extracted: how og:image classifies for rendering —
-	// "none", "icon" (favicon-sized; most platforms demote it), or "banner".
+	// "none", "icon" (favicon-sized; most platforms demote it), or "banner". The
+	// UI branches its card layouts on this verdict instead of re-deriving it, so
+	// the heuristic (isIconImage) exists only in this file.
 	ImageKind string `json:"imageKind"`
 
 	// Platforms reports what each requested platform renders for this page. skim
 	// itself stays platform-agnostic — the handler fills this in once the fetch is
-	// done, so the extraction has no idea platforms exist.
+	// done, so the extraction has no idea platforms exist. The UI reads each
+	// card's shape label from this block, which together with ImageKind keeps
+	// every per-platform rule in this file; API callers script against the same
+	// thing the cards display.
 	Platforms map[string]platformRender `json:"platforms"`
 }
 
@@ -287,7 +292,9 @@ func renderPlatforms(d *ogData, ids []string) map[string]platformRender {
 }
 
 // imageKind classifies og:image once for everyone downstream: "none", "icon"
-// (see isIconImage), or "banner".
+// (see isIconImage), or "banner". It rides the response as ogData.ImageKind, so
+// the UI's templates branch on this verdict rather than keeping their own copy
+// of the heuristic.
 func imageKind(d *ogData) string {
 	switch {
 	case d.Image == "":
@@ -316,7 +323,8 @@ func shapeByKind(kind, none, thumb, banner string) string {
 var iconRe = regexp.MustCompile(`(?i)favicon|apple-touch|/icon|icon\.(?:png|ico|svg)`)
 
 // isIconImage: an icon-sized og:image (a site serving its favicon as og:image)
-// isn't shown as a large embed — platforms demote it.
+// isn't shown as a large embed — platforms demote it. This is the only copy of
+// the heuristic; the UI receives its verdict as imageKind on the wire.
 func isIconImage(d *ogData) bool {
 	if d.Image == "" {
 		return false
