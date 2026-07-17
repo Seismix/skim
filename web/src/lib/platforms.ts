@@ -11,6 +11,7 @@ export const PLATFORMS = [
     { id: "discord", label: "Discord", card: "Discord" },
     { id: "slack", label: "Slack", card: "Slack" },
     { id: "whatsapp", label: "WhatsApp", card: "WhatsApp" },
+    { id: "imessage", label: "iMessage", card: "iMessage" },
 ] as const;
 
 export type PlatformId = (typeof PLATFORMS)[number]["id"];

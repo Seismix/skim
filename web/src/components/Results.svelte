@@ -94,6 +94,16 @@
     <div class="font-mono text-[0.72rem] text-[#667781] dark:text-[#8696a0] mt-[0.15rem] truncate">{domain}</div>
 {/snippet}
 
+<!-- iMessage's caption, shared by the banner and thumb shapes. og:description is
+     absent by design: the rich link renders title + domain only, whatever the
+     page offers. #8e8e93 is Apple's secondary label, unchanged across themes. -->
+{#snippet imText()}
+    <div class="text-[0.88rem] font-semibold text-[#000000] dark:text-[#ffffff] leading-[1.3] line-clamp-2">
+        {og.title || "Untitled"}
+    </div>
+    <div class="font-mono text-[0.72rem] text-[#8e8e93] mt-[0.1rem] truncate">{domain}</div>
+{/snippet}
+
 <!-- One snippet per platform card, holding just the card's markup — the shared
      Section scaffolding and the cap line live in the {#each} that renders them.
      Adding a platform = a registry entry in platforms.ts, a snippet named after
@@ -262,6 +272,30 @@
     </div>
 {/snippet}
 
+{#snippet imessage()}
+    <!-- Where WhatsApp unfurls inside the bubble and keeps the sent link as
+         text, iMessage *replaces* the link: the rich link becomes the bubble,
+         so there's no URL underneath. A bare link unfurls into the gray
+         bubble, not the blue one. A real iMessage bubble is far narrower, but
+         the card holds the 524px column the other platforms use, so the set
+         stays comparable side by side; the 18px corner is kept literal. -->
+    <div class="max-w-[524px] rounded-[18px] overflow-hidden bg-[#f1f1f1] dark:bg-[#2c2c2e]">
+        {#if banner}
+            <Img src={og.image} ratio="1.91/1" class="w-full aspect-[1.91/1] object-cover" />
+            <div class="py-[0.5rem] px-[0.75rem]">{@render imText()}</div>
+        {:else}
+            <!-- The thumb leads the row here — the mirror of WhatsApp, which
+                 trails it. With no image the row is text only. -->
+            <div class="flex items-center gap-[0.6rem] py-[0.5rem] px-[0.75rem]">
+                {#if icon}
+                    <Img src={og.image} class="w-[76px] h-[76px] rounded-[8px] object-cover shrink-0" />
+                {/if}
+                <div class="flex-1 min-w-0">{@render imText()}</div>
+            </div>
+        {/if}
+    </div>
+{/snippet}
+
 <!-- .results lives outside .wrap (see App.svelte) so the grid can break past the
      1080px reading column; it carries its own 2rem gutter. From lg the platform
      cards flow into a 2-col (then 3-col at `ultra`) grid to cut scrolling, with
@@ -281,7 +315,7 @@
          card can't be forgotten when a platform is added — the body snippet
          is looked up by the platform's id. -->
     {#each PLATFORMS as p (p.id)}
-        {@const body = { facebook, twitter, linkedin, discord, slack, whatsapp }[p.id]}
+        {@const body = { facebook, twitter, linkedin, discord, slack, whatsapp, imessage }[p.id]}
         <Section name={p.card} spec={shape(p.id)}>
             {@render body()}
             {@render cap()}
