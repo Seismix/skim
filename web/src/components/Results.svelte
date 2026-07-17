@@ -4,7 +4,7 @@
     import Diagnostics, { type Diag } from "./Diagnostics.svelte";
     import type { OgData } from "../lib/types";
     import { getDomain, proxied } from "../lib/util";
-    import { PLATFORMS, type PlatformId } from "../lib/platforms";
+    import { ALL_IDS, PLATFORMS, type PlatformId } from "../lib/platforms";
 
     let {
         og,
@@ -12,13 +12,21 @@
         metaEl = $bindable(),
         flash = false,
         dark = false,
+        selected = ALL_IDS,
     }: {
         og: OgData;
         inputUrl: string;
         metaEl?: HTMLElement;
         flash?: boolean;
         dark?: boolean;
+        selected?: PlatformId[];
     } = $props();
+
+    // The platform cards that render, in registry order. Diagnostics and the
+    // raw-tag grid aren't platform cards, so the toggles leave them alone: they
+    // report on the tags themselves, which is what you still want to read once
+    // you've narrowed the previews down.
+    let shown = $derived(PLATFORMS.filter((p) => selected.includes(p.id)));
 
     let domain = $derived(getDomain(og.url || inputUrl));
     let isLarge = $derived(og.twitterCard === "summary_large_image");
@@ -312,10 +320,10 @@
         </Section>
     {/if}
 
-    <!-- The card set: one Section per platform, driven by the registry, so a
-         card can't be forgotten when a platform is added — the body snippet
+    <!-- The card set: one Section per selected platform, driven by the registry,
+         so a card can't be forgotten when a platform is added — the body snippet
          is looked up by the platform's id. -->
-    {#each PLATFORMS as p (p.id)}
+    {#each shown as p (p.id)}
         {@const body = { facebook, twitter, linkedin, discord, slack, whatsapp, imessage }[p.id]}
         <Section name={p.card} spec={shape(p.id)}>
             {@render body()}

@@ -169,7 +169,7 @@ func TestHandleFetchOGBatch(t *testing.T) {
 
 // TestPlatformRegistryInSync is the drift guard between the Go and Svelte halves
 // of the platform registry. platformIDs (the wire contract), the PLATFORMS list
-// in platforms.ts, and the card snippets
+// in platforms.ts (the toggle row and ?platforms= param), and the card snippets
 // in Results.svelte (one per id, rendered by lookup) describe the same set —
 // this test fails the build when they disagree, so adding a platform to one
 // place can't silently ship without the others.

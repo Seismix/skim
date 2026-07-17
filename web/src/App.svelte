@@ -4,6 +4,7 @@
     import Results from "./components/Results.svelte";
     import { fetchOgBatch } from "./lib/api";
     import { getDomain } from "./lib/util";
+    import { PLATFORMS, parsePlatformParam, serializePlatformParam, type PlatformId } from "./lib/platforms";
     import type { FetchResult } from "./lib/types";
 
     let loading = $state(false);
@@ -37,6 +38,30 @@
 
     const presetUrls = paramUrls();
     let urls = $state<string[]>(presetUrls.length ? presetUrls : [""]);
+
+    // Which platforms render, driven by the toggle row in the hero. Purely a view
+    // filter: the fetched metadata is platform-agnostic, so toggling only shows and
+    // hides cards that are already built — never a refetch.
+    let selected = $state<PlatformId[]>(parsePlatformParam(location.search));
+
+    function toggle(id: PlatformId) {
+        selected = selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id];
+    }
+
+    // Mirror the selection into ?platforms= so a view is shareable. replaceState,
+    // not push: toggling a card off is a view preference, and pushing would bury
+    // the Back button under an undo trail of clicks instead of stepping between
+    // skims. Pushed entries (see submit) still carry whatever is set here.
+    $effect(() => {
+        const params = new URLSearchParams(location.search);
+        const value = serializePlatformParam(selected);
+        if (value === null) params.delete("platforms");
+        else params.set("platforms", value);
+        const qs = params.toString();
+        const next = qs ? `?${qs}` : location.pathname;
+        const current = location.search || location.pathname;
+        if (next !== current) history.replaceState(history.state, "", next);
+    });
 
     // The single-result view keeps the richer status line (meta count + jump). For
     // a batch we summarise counts instead, since there's no one section to jump to.
@@ -101,6 +126,9 @@
     function onPopState() {
         const next = paramUrls();
         urls = next.length ? next : [""];
+        // The entry we landed on carries its own selection; restore it before the
+        // re-skim so the cards come back filtered as they were.
+        selected = parsePlatformParam(location.search);
         if (next.length) {
             run();
         } else {
@@ -154,8 +182,38 @@
     </header>
 
     <section class="pt-[2.75rem] pb-[1.75rem] max-w-[600px] mx-auto text-center max-[620px]:pt-12 max-[620px]:pb-8">
-        <div class="font-mono text-[0.72rem] tracking-[0.22em] uppercase text-ink-soft mb-[0.85rem]">
-            Open Graph · Twitter · LinkedIn · Discord · Slack · WhatsApp
+        <!-- The platform list doubles as the filter: a lit name carries the lime
+             skim-mark (the wordmark's underline), clicking drops both the mark and
+             the card. Rendered from PLATFORMS, so adding a platform lights up here
+             for free rather than needing this line kept in step by hand.
+             Tracking is tighter than this eyebrow line once wore: seven names at
+             0.22em spilled iMessage onto a line of its own. It still wraps when the
+             column gets narrow — the row just no longer starts out wrapped. -->
+        <div
+            role="group"
+            aria-label="Platforms to preview"
+            class="flex flex-wrap justify-center items-baseline gap-x-[0.2em] gap-y-[0.3em] font-mono text-[0.72rem] tracking-[0.13em] uppercase text-ink-soft mb-[0.85rem]"
+        >
+            {#each PLATFORMS as p, i (p.id)}
+                <!-- The two hover states preview each other: a lit name floods lime
+                     (the header toggle's idiom) to read as "click to drop this", and
+                     an unlit one picks the mark back up to show what returns. Both
+                     keep skim-mark's inline-block/1.45 metrics, which already match
+                     the button's defaults, so lighting up shifts nothing. -->
+                <button
+                    type="button"
+                    aria-pressed={selected.includes(p.id)}
+                    class="bg-transparent border-none px-[0.25em] py-0 font-mono text-[0.72rem] tracking-[0.13em] uppercase cursor-pointer transition-colors duration-[120ms] {selected.includes(
+                        p.id,
+                    )
+                        ? 'text-ink skim-mark hover:bg-lime'
+                        : 'text-ink-soft hover:text-ink hover:skim-mark'}"
+                    onclick={() => toggle(p.id)}>{p.label}</button
+                >
+                {#if i < PLATFORMS.length - 1}
+                    <span aria-hidden="true">·</span>
+                {/if}
+            {/each}
         </div>
         <h1 class="text-[1.12rem] font-normal tracking-normal leading-normal text-ink-soft">
             See how a link looks when it&rsquo;s
@@ -237,13 +295,13 @@
      labelled card set per URL. -->
 {#if single}
     {#if single.data}
-        <Results og={single.data} inputUrl={single.url} bind:metaEl flash={flashMeta} {dark} />
+        <Results og={single.data} inputUrl={single.url} bind:metaEl flash={flashMeta} {dark} {selected} />
     {/if}
 {:else if results.length}
     {#each results as r, i (r.url + "#" + i)}
         {@render headerBar(r, i)}
         {#if r.data}
-            <Results og={r.data} inputUrl={r.url} {dark} />
+            <Results og={r.data} inputUrl={r.url} {dark} {selected} />
         {:else}
             {@render failNotice(r)}
         {/if}

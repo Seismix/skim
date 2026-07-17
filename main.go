@@ -185,9 +185,9 @@ type fetchResult struct {
 
 // platformIDs are the platforms skim reports on, in card order. These ids are the
 // wire contract: they're what the `platforms` request field accepts and what keys
-// the response block. web/src/lib/platforms.ts carries the same list —
-// TestPlatformRegistryInSync fails the build if the two lists (or the card
-// gates in Results.svelte) drift.
+// the response block. web/src/lib/platforms.ts carries the same list to drive the
+// UI's toggle row and its ?platforms= param — TestPlatformRegistryInSync fails
+// the build if the two lists (or the card gates in Results.svelte) drift.
 var platformIDs = []string{"facebook", "twitter", "linkedin", "discord", "slack", "whatsapp", "imessage"}
 
 // platformRender is what a single platform actually shows for a page.
@@ -215,7 +215,8 @@ type platformRender struct {
 // selectPlatforms resolves the request's `platforms` field. Absent (nil) means
 // every platform, so the default costs the caller nothing; an explicit empty array
 // means none. Unknown ids are a 400 rather than a silent drop — a typo'd platform
-// returning no data would look exactly like a platform that renders nothing.
+// returning no data would look exactly like a platform that renders nothing. (The
+// UI is deliberately lenient with the same input; see parsePlatformParam.)
 func selectPlatforms(req *[]string) ([]string, error) {
 	if req == nil {
 		return platformIDs, nil
@@ -386,7 +387,8 @@ func handleFetchOG(w http.ResponseWriter, r *http.Request) {
 	// single form stays for shared links and existing API callers.
 	//
 	// "platforms" narrows the per-platform block on each result. It's a pointer so
-	// an omitted field (every platform) stays distinct from an explicit [] (none).
+	// an omitted field (every platform) stays distinct from an explicit [] (none) —
+	// the same distinction ?platforms= draws in the UI.
 	var body struct {
 		URL       string    `json:"url"`
 		URLs      []string  `json:"urls"`
