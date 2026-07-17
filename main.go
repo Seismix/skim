@@ -23,6 +23,8 @@ import (
 	"regexp"
 	"runtime"
 	"runtime/debug"
+	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -40,7 +42,9 @@ var uiFS embed.FS
 // defaultUA mimics the canonical OpenGraph crawler. Sites commonly serve their
 // share metadata only to recognized crawlers (Reddit, for example, returns an
 // anti-bot landing page otherwise), so this makes skim see what Facebook /
-// WhatsApp / Discord / Slack actually see. Override with --user-agent.
+// WhatsApp / Discord / Slack actually see — and iMessage, whose own fetcher
+// identifies as "facebookexternalhit/1.1 Facebot Twitterbot/1.0". Override with
+// --user-agent.
 const defaultUA = "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)"
 
 var userAgent = defaultUA
@@ -155,6 +159,15 @@ type ogData struct {
 	ThemeColor     string            `json:"themeColor"`
 	Favicon        string            `json:"favicon"`
 	AllMeta        map[string]string `json:"allMeta"`
+
+	// ImageKind is derived, not extracted: how og:image classifies for rendering —
+	// "none", "icon" (favicon-sized; most platforms demote it), or "banner".
+	ImageKind string `json:"imageKind"`
+
+	// Platforms reports what each requested platform renders for this page. skim
+	// itself stays platform-agnostic — the handler fills this in once the fetch is
+	// done, so the extraction has no idea platforms exist.
+	Platforms map[string]platformRender `json:"platforms"`
 }
 
 // fetchResult is one entry of a batch response: the input URL paired with its
@@ -163,6 +176,193 @@ type fetchResult struct {
 	URL   string  `json:"url"`
 	Data  *ogData `json:"data,omitempty"`
 	Error string  `json:"error,omitempty"`
+}
+
+// platformIDs are the platforms skim reports on, in card order. These ids are the
+// wire contract: they're what the `platforms` request field accepts and what keys
+// the response block.
+var platformIDs = []string{"facebook", "twitter", "linkedin", "discord", "slack", "whatsapp", "imessage"}
+
+// platformRender is what a single platform actually shows for a page.
+//
+// A null field means the platform doesn't render it at all — either because it
+// never does (iMessage and LinkedIn ignore og:description whatever the page
+// offers), or because this page's data doesn't earn it (Discord and Slack demote
+// an icon-sized og:image to a provider icon instead of an embed). An empty string
+// means the opposite: the platform would show the field, but the page left it
+// blank. That distinction is the point of the block — "will iMessage show my
+// description" is answerable without rendering anything.
+//
+// Title is reported as-is: an empty title means the page gave none. The cards fall
+// back to "Untitled", but that's skim's placeholder, not something the platform
+// would print.
+type platformRender struct {
+	Shape       string  `json:"shape"`
+	Title       string  `json:"title"`
+	Description *string `json:"description"`
+	Image       *string `json:"image"`
+	Domain      string  `json:"domain"`
+	SiteName    *string `json:"siteName"`
+}
+
+// selectPlatforms resolves the request's `platforms` field. Absent (nil) means
+// every platform, so the default costs the caller nothing; an explicit empty array
+// means none. Unknown ids are a 400 rather than a silent drop — a typo'd platform
+// returning no data would look exactly like a platform that renders nothing.
+func selectPlatforms(req *[]string) ([]string, error) {
+	if req == nil {
+		return platformIDs, nil
+	}
+	out := make([]string, 0, len(*req))
+	for _, raw := range *req {
+		id := strings.ToLower(strings.TrimSpace(raw))
+		if id == "" {
+			continue
+		}
+		if !slices.Contains(platformIDs, id) {
+			return nil, fmt.Errorf("unknown platform %q — valid: %s", id, strings.Join(platformIDs, ", "))
+		}
+		if !slices.Contains(out, id) {
+			out = append(out, id)
+		}
+	}
+	return out, nil
+}
+
+// renderPlatforms reports what each of ids renders for d. The rules here mirror
+// the cards in web/src/components/Results.svelte — the shape each platform picks
+// and the fields it uses — and the two are separate implementations of the same
+// behaviour, so a change to a card belongs here too.
+func renderPlatforms(d *ogData, ids []string) map[string]platformRender {
+	domain := getDomain(d.URL)
+	kind := imageKind(d)
+	icon := kind == "icon"
+	out := make(map[string]platformRender, len(ids))
+
+	for _, id := range ids {
+		p := platformRender{Title: d.Title, Domain: domain}
+		switch id {
+		case "facebook":
+			p.Shape = "1.91 : 1"
+			p.Description = new(d.Description)
+			p.Image = ptrOrNil(d.Image)
+		case "twitter":
+			// twitter:card picks the crop; without the tag it falls back to summary.
+			if d.TwitterCard == "summary_large_image" {
+				p.Shape = "summary_large_image · 2 : 1"
+			} else {
+				p.Shape = "summary · 1 : 1"
+			}
+			p.Description = new(d.Description)
+			p.Image = ptrOrNil(d.Image)
+		case "linkedin":
+			p.Shape = "1.91 : 1"
+			p.Image = ptrOrNil(d.Image)
+		case "discord":
+			p.Shape = "embed"
+			p.Description = new(d.Description)
+			if !icon {
+				p.Image = ptrOrNil(d.Image)
+			}
+			p.SiteName = ptrOrNil(d.SiteName)
+		case "slack":
+			p.Shape = "unfurl"
+			p.Description = new(d.Description)
+			if !icon {
+				p.Image = ptrOrNil(d.Image)
+			}
+			// Slack's header falls back to the domain when og:site_name is absent.
+			p.SiteName = new(firstNonEmpty(d.SiteName, domain))
+		case "whatsapp":
+			p.Shape = shapeByKind(kind, "bubble", "bubble · thumb", "bubble · 1.91 : 1")
+			p.Description = new(d.Description)
+			p.Image = ptrOrNil(d.Image)
+		case "imessage":
+			p.Shape = shapeByKind(kind, "rich link", "rich link · thumb", "rich link · banner")
+			p.Image = ptrOrNil(d.Image)
+		}
+		out[id] = p
+	}
+	return out
+}
+
+// imageKind classifies og:image once for everyone downstream: "none", "icon"
+// (see isIconImage), or "banner".
+func imageKind(d *ogData) string {
+	switch {
+	case d.Image == "":
+		return "none"
+	case isIconImage(d):
+		return "icon"
+	default:
+		return "banner"
+	}
+}
+
+// shapeByKind names the three shapes WhatsApp and iMessage each pick from, off
+// the imageKind classification: no image at all, an icon-sized one (demoted to
+// a thumb), or a real banner.
+func shapeByKind(kind, none, thumb, banner string) string {
+	switch kind {
+	case "none":
+		return none
+	case "icon":
+		return thumb
+	default:
+		return banner
+	}
+}
+
+var iconRe = regexp.MustCompile(`(?i)favicon|apple-touch|/icon|icon\.(?:png|ico|svg)`)
+
+// isIconImage: an icon-sized og:image (a site serving its favicon as og:image)
+// isn't shown as a large embed — platforms demote it.
+func isIconImage(d *ogData) bool {
+	if d.Image == "" {
+		return false
+	}
+	if iconRe.MatchString(d.Image) {
+		return true
+	}
+	w, ok := leadingInt(d.ImageWidth)
+	return ok && w < 200
+}
+
+// leadingInt mirrors JS parseInt closely enough for og:image:width: read the
+// leading run of digits and ignore any trailing unit, so "200px" is 200. Reports
+// false where parseInt would yield NaN — which compares false against everything,
+// so a junk width can't make an image look icon-sized.
+func leadingInt(s string) (int, bool) {
+	s = strings.TrimSpace(s)
+	i := 0
+	for i < len(s) && s[i] >= '0' && s[i] <= '9' {
+		i++
+	}
+	if i == 0 {
+		return 0, false
+	}
+	n, err := strconv.Atoi(s[:i])
+	return n, err == nil
+}
+
+// getDomain mirrors the UI's getDomain: the hostname, or the input unchanged when
+// it isn't a URL with a host.
+func getDomain(raw string) string {
+	u, err := url.Parse(raw)
+	if err != nil || u.Host == "" {
+		return raw
+	}
+	return u.Hostname()
+}
+
+// ptrOrNil distinguishes "the platform shows this, and it's blank" from "the
+// platform shows nothing here" — the empty-string vs. null split platformRender
+// documents.
+func ptrOrNil(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
 }
 
 func handleFetchOG(w http.ResponseWriter, r *http.Request) {
@@ -174,12 +374,22 @@ func handleFetchOG(w http.ResponseWriter, r *http.Request) {
 	// Accept either a single "url" (legacy shape, returns one ogData) or a "urls"
 	// array (batch shape, returns {"results":[...]}). The UI sends "urls"; the
 	// single form stays for shared links and existing API callers.
+	//
+	// "platforms" narrows the per-platform block on each result. It's a pointer so
+	// an omitted field (every platform) stays distinct from an explicit [] (none).
 	var body struct {
-		URL  string   `json:"url"`
-		URLs []string `json:"urls"`
+		URL       string    `json:"url"`
+		URLs      []string  `json:"urls"`
+		Platforms *[]string `json:"platforms"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeErr(w, http.StatusBadRequest, "Invalid JSON body")
+		return
+	}
+
+	ids, err := selectPlatforms(body.Platforms)
+	if err != nil {
+		writeErr(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -201,6 +411,7 @@ func handleFetchOG(w http.ResponseWriter, r *http.Request) {
 					results[i].Error = err.Error()
 					return
 				}
+				data.Platforms = renderPlatforms(data, ids)
 				results[i].Data = data
 			}(i, u)
 		}
@@ -219,6 +430,7 @@ func handleFetchOG(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	data.Platforms = renderPlatforms(data, ids)
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(data)
 }
@@ -288,9 +500,11 @@ func skim(ctx context.Context, rawURL string) (*ogData, error) {
 		AllMeta:        meta,
 	}
 
-	// Resolve relative image / favicon URLs against the fetched page.
+	// Resolve relative image / favicon URLs against the fetched page. Classify
+	// after resolving, so the icon heuristic's regex sees the final URL.
 	data.Image = resolveURL(parsed, data.Image)
 	data.Favicon = resolveURL(parsed, data.Favicon)
+	data.ImageKind = imageKind(&data)
 
 	return &data, nil
 }
