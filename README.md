@@ -2,9 +2,9 @@
 
 Preview how a link looks when shared on social media — **including `localhost`** — without deploying.
 
-skim extracts OpenGraph / Twitter / standard meta tags from any URL — one or several at once — and renders realistic preview cards for **Facebook, Twitter/X, LinkedIn, Discord, Slack, and WhatsApp**, plus validation diagnostics and a raw meta-tag grid.
+skim extracts OpenGraph / Twitter / standard meta tags from any URL — one or several at once — and renders realistic preview cards for **Facebook, Twitter/X, LinkedIn, Discord, Slack, WhatsApp, and iMessage**, plus validation diagnostics and a raw meta-tag grid.
 
-<img src="docs/screenshot.png" alt="skim previewing a link across Facebook, Twitter/X, LinkedIn, Discord, Slack, and WhatsApp, with diagnostics and a raw meta-tag grid" width="1000">
+<img src="docs/screenshot.png" alt="skim previewing a link across Facebook, Twitter/X, LinkedIn, Discord, Slack, WhatsApp, and iMessage, with diagnostics and a raw meta-tag grid" width="1000">
 
 > The cards are **approximations** of how each platform renders a shared link — not pixel-perfect reproductions. Exact appearance varies by platform, client, and device, and shifts over time as the platforms change. Use skim to sanity-check your tags and layout, not to match a specific platform down to the pixel.
 
@@ -38,9 +38,11 @@ You can type a bare host — `reddit.com` becomes `https://reddit.com`, while `l
 
 Comparing several links? Add more inputs with the **+** button (or paste a comma-separated list into a single box), then skim renders a stacked card set per URL. Each is fetched independently and concurrently, so one bad link won't sink the rest, and the address bar keeps a `?url=` per link so the comparison stays shareable.
 
+Only care about some platforms? The platform list above the input is the filter — the underlined names are the ones rendering, and clicking one drops its card. It's a view filter, not a refetch: the metadata is the same either way. The selection rides along as `?platforms=imessage,slack` (dropped from the URL when everything's on), so a narrowed view is shareable too. Diagnostics and the raw meta-tag grid ignore the filter — they report on the tags themselves, not on any one platform.
+
 Flags: `--port N` (fixed port), `--no-open` (don't launch the browser), `--user-agent "…"`, `-v` (print the version and exit). skim binds loopback (`127.0.0.1`) only — it's a personal local tool. Press Ctrl+C to stop — the listener closes and the port frees.
 
-By default skim sends the OpenGraph crawler User-Agent (`facebookexternalhit`), since many sites serve share metadata **only** to recognized crawlers — Reddit, for example, returns an anti-bot page otherwise. This makes skim see what Facebook / WhatsApp / Discord / Slack see. Override with `--user-agent`.
+By default skim sends the OpenGraph crawler User-Agent (`facebookexternalhit`), since many sites serve share metadata **only** to recognized crawlers — Reddit, for example, returns an anti-bot page otherwise. This makes skim see what Facebook / WhatsApp / Discord / Slack see — and iMessage too, whose preview fetcher identifies as `facebookexternalhit/1.1 Facebot Twitterbot/1.0`. Override with `--user-agent`.
 
 ## Why a local server at all?
 
@@ -71,6 +73,41 @@ curl -s localhost:PORT/api/fetch-og -d '{"urls":["example.com","localhost:3000"]
 ```
 
 Grab `PORT` from the startup banner, or pin it with `--port`.
+
+### What each platform renders
+
+Alongside the raw tags, every response carries a `platforms` block: the shape each platform picks for your page, and the fields it actually uses. It's the scriptable half of the cards — "will iMessage show my description" without rendering anything.
+
+```bash
+curl -s localhost:PORT/api/fetch-og -d '{"url":"example.com","platforms":["imessage","slack"]}'
+```
+
+```json
+{
+  "platforms": {
+    "imessage": {
+      "shape": "rich link · thumb",
+      "title": "Fixture Press — Dispatches from a Small Static Server",
+      "description": null,
+      "image": "https://example.com/icon.png",
+      "domain": "example.com",
+      "siteName": null
+    },
+    "slack": {
+      "shape": "unfurl",
+      "title": "Fixture Press — Dispatches from a Small Static Server",
+      "description": "This page ships an icon-sized og:image…",
+      "image": null,
+      "domain": "example.com",
+      "siteName": "Fixture Press"
+    }
+  }
+}
+```
+
+Read `null` as **the platform doesn't render this** — iMessage ignores `og:description` whatever you write, and an icon-sized `og:image` becomes a provider icon on Slack rather than an embed (which is why one reports `description: null` and the other `image: null` for the same page). An **empty string** means the opposite: the platform would show it, but your page left it blank. The classification those demotions key off is also reported directly, as a top-level `imageKind`: `none`, `icon`, or `banner`.
+
+`platforms` is an allowlist matching the UI's `?platforms=`. Omit it for all of them; pass `[]` for none (handy when you only want the raw tags). Valid ids: `facebook`, `twitter`, `linkedin`, `discord`, `slack`, `whatsapp`, `imessage` — anything else is a `400` rather than a silent empty block, so a typo can't masquerade as a platform that renders nothing.
 
 ## Building
 
